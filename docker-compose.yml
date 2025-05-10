@@ -1,0 +1,97 @@
+version: "3.8"
+
+services:
+  # Backend Laravel
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gymboard-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./backend:/var/www
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=gymboard
+      - DB_USERNAME=gymboard
+      - DB_PASSWORD=secret
+    networks:
+      - gymboard-network
+    depends_on:
+      - db
+
+  # Nginx
+  nginx:
+    image: nginx:alpine
+    container_name: gymboard-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d/
+    networks:
+      - gymboard-network
+    depends_on:
+      - app
+
+  # PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: gymboard-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-gymboard}
+      POSTGRES_USER: ${DB_USERNAME:-gymboard}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - gymboard-network
+
+  # pgAdmin
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: gymboard-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gymboard.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - gymboard-network
+    depends_on:
+      - db
+
+  # Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gymboard-frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    networks:
+      - gymboard-network
+    depends_on:
+      - app
+
+networks:
+  gymboard-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  pgadmin_data:
