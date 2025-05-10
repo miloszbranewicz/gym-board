@@ -111,6 +111,88 @@ docker-compose exec frontend sh
 
 ---
 
+## 👥 Getting Started for New Developers
+
+### Prerequisites Check
+Before starting, ensure you have:
+- Docker Desktop installed and running
+- Git installed
+- Node.js (v18 or later) installed
+- Composer installed (for local development)
+
+### First-time Setup
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd gym-board
+```
+
+2. Create `.env` files:
+```bash
+# Backend
+cp backend/.env.example backend/.env
+
+# Frontend
+cp frontend/.env.example frontend/.env
+```
+
+3. Start the development environment:
+```bash
+docker-compose up -d
+```
+
+4. Install dependencies and initialize the project:
+```bash
+# Backend setup
+docker-compose exec app composer install
+docker-compose exec app php artisan key:generate
+docker-compose exec app php artisan migrate
+docker-compose exec app php artisan db:seed
+
+# Frontend setup
+docker-compose exec frontend npm install
+```
+
+5. Verify the setup:
+- Frontend should be running at http://localhost:5173
+- Backend API should be accessible at http://localhost:8000
+- Database should be accessible through pgAdmin at http://localhost:5050
+
+### Common Issues & Solutions
+
+1. **Port conflicts**: If you see port conflicts, check if you have other services running on ports 5173, 8000, or 5432.
+
+2. **Database connection issues**: 
+   - Ensure PostgreSQL container is running: `docker-compose ps`
+   - Check database logs: `docker-compose logs db`
+
+3. **Permission issues**:
+   - On Linux/Mac: `chmod -R 777 storage bootstrap/cache`
+   - On Windows: Ensure Docker Desktop has proper permissions
+
+4. **Container not starting**:
+   - Try rebuilding: `docker-compose up -d --build`
+   - Check logs: `docker-compose logs -f`
+
+### Development Workflow
+
+1. Always create a new branch for your work:
+```bash
+git checkout -b feature/your-feature-name
+```
+
+2. After making changes:
+```bash
+git add .
+git commit -m "Description of your changes"
+git push origin feature/your-feature-name
+```
+
+3. Create a Pull Request on GitHub to merge your changes into the main branch.
+
+---
+
 ## 🚀 Goals
 
 - ✅ Prove the concept of managing classes and signups
